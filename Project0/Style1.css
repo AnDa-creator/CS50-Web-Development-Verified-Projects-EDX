@@ -1,0 +1,36 @@
+h1 {
+	color : yellow;
+	text-align: center;
+	font-weight: Bold;
+}
+
+h2 {
+	color : brown;
+	text-align: left;
+	font-weight: Bold;
+}
+
+h4 {
+	color : green;
+	text-align: left;
+	font-weight: Bold;
+}
+
+p {
+	font-size : 12 px;
+	color: white;
+}
+
+p::selection {
+      color: red;
+      background-color: yellow;
+}
+
+#Sections_all {
+		font-size : 15 px;
+		a::before {
+                content: "\21d2  Click here: ";
+                font-weight: italic;
+            }
+
+}

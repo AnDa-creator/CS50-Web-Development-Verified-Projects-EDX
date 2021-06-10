@@ -1,0 +1,28 @@
+h1 {
+    color: blue;
+    text-align: center;
+}
+h2 {
+	color : blue;
+	text-align: left;
+	font-weight: Bold;
+}
+
+h4 {
+	color : green;
+	text-align: left;
+	font-weight: Bold;
+}
+
+p {
+	font-size : 12 px;
+}
+
+#Sections_all {
+		font-size : 15 px;
+		a::before {
+                content: "\21d2  Click here: ";
+                font-weight: italic;
+            }
+
+}

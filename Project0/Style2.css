@@ -1,0 +1,35 @@
+.endlink, .reference {
+  font-family: sans-serif;
+  font-size: 18px;
+  font-weight: bold;
+  border: 1px solid black;
+  padding: 20px;
+  margin: 20px;
+}
+
+#content h1, #content h2, #content p {
+  color: blue;
+  font-size: 15px;
+}
+#content ul {
+  font-size: 17 px;
+  color: green;
+}
+
+.reference {
+  background-color: grey;
+  color: red;
+}
+
+.endlink {
+  color: grey;
+}
+
+.parts h3 {
+  color: grey;
+}
+.parts p {
+  color: light green;
+}
+
+/*# sourceMappingURL=Style2.css.map */

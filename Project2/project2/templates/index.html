@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+            <style>
+            body{
+                background-image: url('https://images.all-free-download.com/images/graphicthumb/exquisitely_carved_droplets_background_01_hd_pictures_169868.jpg');                
+                opacity: .8;
+            }
+            #heading {
+                border:2 px solid black;
+                font-family: sans-serif, Arial, Helvetica;
+                color: indigo;
+                text-align: center;
+            }
+            #channels, #ChNamegp, #Newmessage {
+                display: none;
+            }
+        </style>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/handlebars.js/4.0.11/handlebars.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.3.0/socket.io.js"></script>        
+        {% raw -%}
+        <script id="ChanAdd" type="text/template" >
+            <option value='{{value}}'>{{value}}</option>
+        </script>
+        {%- endraw %}
+        {% raw -%}
+        <script id="ChanLoad" type="text/template">
+            {{#each values}}
+            <option value="{{this}}">{{this}}</option>
+            {{/each}}
+        </script>
+        {%- endraw %}
+        <script id="save_username" >
+                var channelList = [];
+                var lastchannel = false;
+                var channelnow
+                var counter = 0;
+           
+            
+                document.addEventListener('DOMContentLoaded', () => {
+                    if (localStorage.getItem('newname')){
+                        document.querySelector('#usNamegp').remove();
+                        const username = localStorage.getItem('newname');
+                        document.querySelector('#heading').innerHTML = "Hello " + username ;
+                        document.querySelector('#channels').style.display = 'flex';
+                        
+        
+                        var found = false;
+                        var val;
+                        name = localStorage.getItem("lastchannel")
+                        const request1 = new XMLHttpRequest();
+                            request1.open('GET', "/channels");
+                            request1.onload = () => {
+                                const response1 = JSON.parse(request1.responseText);
+                                channelList = response1;
+                                found = channelList.includes(name);
+                                if (found){
+                                    // alert('hello');                        
+                                    document.querySelector('#dafec').value = name;
+                                    const header = document.createElement('h2');
+                                    header.innerHTML = "current channel is " + name;
+                                    header.align = 'center';
+                                    document.querySelector('#Newmessage').style.display = 'block';
+                                    document.querySelector('#currentChannel').append(header);
+                                    channelnow = name;
+                                    const request = new XMLHttpRequest();
+                                        request.open('POST', "/lastchannel");
+                                        const data = new FormData();
+                                        data.append('channel2', name);
+                                        request.send(data);
+                                        request.onload = () => {
+                                            const data = JSON.parse(request.responseText);
+                                
+                                            for (var i = 0, len = data.length; i < len; i++) {
+                                                add_post(data[i]);
+                                                }
+                                        };
+                                    
+                                    
+                                        // Add a new post with given contents to DOM.
+                                    function add_post(contents) {
+
+                                        // Create new post.
+                                        const division = document.createElement('div');
+                                        division.dataset.user = contents.user;
+                                        division.dataset.time = contents.time;
+                                        division.dataset.channel = contents.channel;
+                                        division.dataset.message = contents.message;
+                                        const button = document.createElement('button');
+                                        button.innerHTML = "Delete";
+                                        button.className = "deleter";
+                                        const p = document.createElement('p');
+                                        p.style.color = 'red';
+                                        p.style.backgroundColor = 'rgba(255,255,255,.6)';
+                                        var found = false;
+                                        if(contents.user == localStorage.getItem('newname')){
+                                            p.align = 'right';
+                                            found = true;
+                                            const button = document.createElement('button')
+                                        }
+                                        else {
+                                            p.align = 'left';
+                                        }
+                                        p.style.border = '4px solid black';
+                                        p.innerHTML = `${contents.user} at ${contents.time}: <br> ${contents.message}`;
+                                        division.className = "post";
+                                        division.append(p);
+                                        if (found==true){
+                                        division.append(button);
+                                        }
+                                        document.querySelector('#messages').append(division);
+                                        var object =  document.getElementsByClassName('deleter');
+                                        console.log("You can delete messages");
+                                        for (var i = 0, len = object.length; i < len; i++) {
+                                            object[i].addEventListener('click', deletethen)
+
+                                        }
+                                    
+                                        function deletethen(){
+                                        const division = this.parentElement;
+                                            const request = new XMLHttpRequest();
+                                            request.open("POST" ,'/delete');
+                                            const value = new FormData();
+                                            value.append('user', division.dataset.user);
+                                            value.append('time', division.dataset.time);
+                                            value.append('channel', division.dataset.channel);
+                                            value.append('message', division.dataset.message);
+                                            request.send(value);
+                                            division.remove();
+                                            socket.emit('delete', {'channel': division.dataset.channel});
+                                        };        
+                    
+                                        
+                                    };
+                        
+                        
+                        
+                                }
+
+
+                                };
+                            request1.send();
+
+                        }
+                    else{
+                        document.querySelector('#buttonschan').style.display = 'none';                    
+                        if (document.querySelector('#username').value.length === 0)
+                            document.querySelector('#username_submit').disabled = true;
+
+                        document.querySelector('#username').onkeyup = () => {
+                            if (document.querySelector('#username').value.length > 0)
+                                document.querySelector('#username_submit').disabled = false; 
+            
+                            else
+                                document.querySelector('#username_submit').disabled = true;
+                        };
+                        document.querySelector('#username_submit').onclick = () => {
+                            const username = document.querySelector('#username').value;
+                            window.localStorage.setItem('newname', username);
+                            alert("new user is " + username);
+                            document.querySelector('#usNamegp').remove();
+                            document.querySelector('#heading').innerHTML = "Hello " + username;
+                            document.querySelector('#channels').style.display = 'flex';
+                            document.querySelector('#buttonschan').style.display = 'flex';
+                            document.querySelector('#buttonschan').style.display = 'block';
+
+                        };
+                    }
+                    const request = new XMLHttpRequest();
+                            request.open('GET', "/channels");
+                            request.onload = () => {
+                                const response = JSON.parse(request.responseText);
+                                channelList = response;
+                                var template1 = Handlebars.compile(document.querySelector('#ChanLoad').innerHTML);
+                                var content1 = template1({'values' : channelList});
+                                document.querySelector('#channel').innerHTML += content1;
+                                };
+                            request.send();
+                    
+                    var template1 = Handlebars.compile(document.querySelector('#ChanLoad').innerHTML);
+                    var content1 = template1({'values' : channelList});
+                    document.querySelector('#channel').innerHTML += content1;
+
+                    
+                    document.querySelector('#newChannel').onclick = () => {
+                        document.querySelector('#ChNamegp').style.display = 'flex';
+                        if (document.querySelector('#channelname').value.length === 0)
+                            document.querySelector('#channel_submit').disabled = true;
+
+                        document.querySelector('#channelname').onkeyup = () => {
+                            if (document.querySelector('#channelname').value.length > 0)
+                                document.querySelector('#channel_submit').disabled = false; 
+            
+                            else
+                                document.querySelector('#channel_submit').disabled = true;
+                        };
+                        document.querySelector('#channel_submit').onclick = () => {
+                            const NewName = document.querySelector('#channelname').value;
+                            if (channelList.length > 0){
+                            var found = channelList.indexOf(NewName);
+                            console.log(channelList);
+                            if (found != -1){
+                                alert('channel already exists, please enter a new channel name or proceed to the same');
+                                return undefined;
+                            }}
+                            const template = Handlebars.compile(document.querySelector('#ChanAdd').innerHTML);
+                            const content = template({'value' : NewName});
+                            document.querySelector('#channel').innerHTML += content;
+                            channelList.push(NewName);
+                            const request = new XMLHttpRequest();
+                            request.open('POST', "/channeladd");
+                            const data = new FormData();
+                            data.append('name', NewName);
+                            request.send(data);
+                            request.onload = () => {
+                                const response = JSON.parse(request.responseText);
+                                channelList = response;
+                                
+                                
+                            }
+                            alert('New channel added named '+ NewName );
+                            document.querySelector('#ChNamegp').style.display = 'none';
+                            
+                            
+                               
+                        };
+                    
+                        
+                    };
+                    
+                        document.querySelector('#channelTo').onclick = () => {
+                    
+                            const channel = document.querySelector("#channel").value;
+                            if (channel == "Choose...") {return undefined;}
+                            lastchannel = true;
+                            document.querySelector('#messages').innerHTML= '';
+                            document.querySelector('#currentChannel').innerHTML = ''
+                            const header = document.createElement('h2');
+                            header.innerHTML = "current channel is " + channel;
+                            header.align = 'center';
+                            document.querySelector('#Newmessage').style.display = 'block';
+                            document.querySelector('#currentChannel').append(header);
+                            channelnow = channel;
+                            window.localStorage.setItem("lastchannel", channel);
+                            const request = new XMLHttpRequest();
+                            request.open('POST', "/channelset");
+                            const name = new FormData();
+                            name.append('channel' , channel);
+                            request.send(name);
+                            request.onload = () => {
+                                const data = JSON.parse(request.responseText);
+                                for (var i = 0, len = data.length; i < len; i++) {
+                                    add_post(data[i]);
+                                    }
+                            };
+
+                            // Add a new post with given contents to DOM.
+                        function add_post(contents) {
+
+                            // Create new post.
+                            const division = document.createElement('div');
+                            division.dataset.user = contents.user;
+                            division.dataset.time = contents.time;
+                            division.dataset.channel = contents.channel;
+                            division.dataset.message = contents.message;
+                            const button = document.createElement('button');
+                            button.innerHTML = "Delete";
+                            button.className = "deleter";
+                            const p = document.createElement('p');
+                            p.style.color = 'red';
+                            p.style.backgroundColor = 'rgba(255,255,255,.6)';
+                            var found = false;
+                            if(contents.user == localStorage.getItem('newname')){
+                                p.align = 'right';
+                                found = true;
+                                const button = document.createElement('button')
+                             }
+                             else {
+                                 p.align = 'left';
+                             }
+                             p.style.border = '4px solid black';
+                             p.innerHTML = `${contents.user} at ${contents.time}: <br> ${contents.message}`;
+                             division.className = "post";
+                            division.append(p);
+                            if (found==true){
+                            division.append(button);
+                            }
+                            document.querySelector('#messages').append(division);
+                            var object =  document.getElementsByClassName('deleter');
+                            console.log("You are on a channel: " + lastchannel);
+                            for (var i = 0, len = object.length; i < len; i++) {
+                                object[i].addEventListener('click', deletethen)
+
+                            }
+                        
+                            function deletethen(){
+                            const division = this.parentElement;
+                                const request = new XMLHttpRequest();
+                                request.open("POST" ,'/delete');
+                                const value = new FormData();
+                                value.append('user', division.dataset.user);
+                                value.append('time', division.dataset.time);
+                                value.append('channel', division.dataset.channel);
+                                value.append('message', division.dataset.message);
+                                request.send(value);
+                                division.remove();
+                            };
+                            
+                        };
+
+    
+                        };
+                         
+                    
+
+
+                       // Connect to websocket
+                       var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port);
+                        var array = [];
+                       // When connected, configure buttons
+                       socket.on('connect', () => {
+
+                        // Each button should emit a "submit vote" event
+                        document.querySelectorAll('#sendMsg').forEach(button => {
+                            button.onclick = () => {
+                                const selection = document.querySelector('#dafec').value;
+                                const user = localStorage.getItem('newname')
+                                var currentdate = new Date(); 
+                                var datetime = currentdate.getDate() + "/"
+                                                + (currentdate.getMonth()+1)  + "/" 
+                                                + currentdate.getFullYear() + " @ "  
+                                                + currentdate.getHours() + ":"  
+                                                + currentdate.getMinutes() + ":" 
+                                                + currentdate.getSeconds();
+                                const channel = channelnow ;
+                                if(selection.length > 0) {
+                                socket.emit('send_message', {'message': selection, 'user': user, 'time': datetime, 'channel' : channel});
+                                }
+                            };
+                        });
+                    });
+
+                    socket.on('reload message', data => {
+                        if (data.channel != channelnow){ return undefined;}
+                        document.querySelector('#messages').innerHTML = '';
+                        const request = new XMLHttpRequest();
+                            request.open('POST', "/channelset");
+                            const name = new FormData();
+                            name.append('channel' , channelnow);
+                            request.send(name);
+                            request.onload = () => {
+                                const data = JSON.parse(request.responseText);
+                                for (var i = 0, len = data.length; i < len; i++) {
+                                    add_post(data[i]);
+                                    }
+                            };
+
+                    });
+                     
+ 
+                     // When a new vote is announced, add to the unordered list
+                     socket.on('announce message', data => {
+                         if (data.channel != channelnow) {return undefined;}
+                         const division = document.createElement('div');
+                         division.dataset.user = data.user;
+                         division.dataset.time = data.time;
+                         division.dataset.channel = data.channel;
+                         division.dataset.message = data.message;
+                         const button = document.createElement('button');
+                         button.innerHTML = "Delete";
+                         button.className = "deleter";
+                         const p = document.createElement('p');
+                         p.style.color = 'red';
+                         p.style.backgroundColor = 'rgba(255,255,255,.6)';
+                         var found = false;
+                         if(data.user == localStorage.getItem('newname')){
+                            p.align = 'right';
+                            found = true;
+                            const button = document.createElement('button')
+                         }
+                         else {
+                             p.align = 'left';
+                         }
+                         p.style.border = '4px solid black';
+                         p.innerHTML = `${data.user} at ${data.time}: <br> ${data.message}`;
+                         division.className = "post";
+                         division.append(p);
+                         if (found==true){
+                         division.append(button);
+                         }
+                         document.querySelector('#messages').append(division);
+                         var object =  document.getElementsByClassName('deleter');
+                    console.log("You are on a channel: " + lastchannel);
+                    if (lastchannel){ 
+                    console.log('Loaded messages');
+                    }
+                    for (var i = 0, len = object.length; i < len; i++) {
+                        object[i].addEventListener('click', deletethen)
+
+                    }
+                
+                    function deletethen(){
+                       const division = this.parentElement;
+                        const request = new XMLHttpRequest();
+                        request.open("POST" ,'/delete');
+                        const value = new FormData();
+                        value.append('user', division.dataset.user);
+                        value.append('time', division.dataset.time);
+                        value.append('channel', division.dataset.channel);
+                        value.append('message', division.dataset.message);
+                        request.send(value);
+                        division.remove();
+                        socket.emit('delete', {'channel': division.dataset.channel});
+                    
+
+                    }
+                     });
+                     
+                    
+
+                    function add_post(contents) {
+
+                        // Create new post.
+                        const division = document.createElement('div');
+                        division.dataset.user = contents.user;
+                        division.dataset.time = contents.time;
+                        division.dataset.channel = contents.channel;
+                        division.dataset.message = contents.message;
+                        const button = document.createElement('button');
+                        button.innerHTML = "Delete";
+                        button.className = "deleter";
+                        const p = document.createElement('p');
+                        p.style.color = 'red';
+                        p.style.backgroundColor = 'rgba(255,255,255,.6)';
+                        var found = false;
+                        if(contents.user == localStorage.getItem('newname')){
+                            p.align = 'right';
+                            found = true;
+                            const button = document.createElement('button')
+                         }
+                         else {
+                             p.align = 'left';
+                         }
+                         p.style.border = '4px solid black';
+                         p.innerHTML = `${contents.user} at ${contents.time}: <br> ${contents.message}`;
+                         division.className = "post";
+                        division.append(p);
+                        if (found==true){
+                        division.append(button);
+                        }
+                        document.querySelector('#messages').append(division);
+                        var object =  document.getElementsByClassName('deleter');
+                        console.log("You are on a channel: " + lastchannel);
+                        for (var i = 0, len = object.length; i < len; i++) {
+                            object[i].addEventListener('click', deletethen)
+
+                        }
+                    
+                        function deletethen(){
+                        const division = this.parentElement;
+                            const request = new XMLHttpRequest();
+                            request.open("POST" ,'/delete');
+                            const value = new FormData();
+                            value.append('user', division.dataset.user);
+                            value.append('time', division.dataset.time);
+                            value.append('channel', division.dataset.channel);
+                            value.append('message', division.dataset.message);
+                            request.send(value);
+                            division.remove();
+                            socket.emit('delete', {'channel': division.dataset.channel});
+                        };
+                        
+                    };  
+                    
+                });       
+            
+             
+        </script>
+    </head>
+    <body>
+        <h1 id="heading">My very own chatsite</h1>
+        <div id="usNamegp" class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="inputGroup-sizing-sm">Welcome! Please enter username</span>
+            </div>
+            <input id="username" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="submit" id="username_submit" class="btn btn-secondary">Sumbit</button>
+            </div>
+            
+          </div>
+          <div id="currentChannel"> </div>
+          <div id="channels" class="input-group mb-3">
+            <div class="input-group-prepend">
+              <button class="btn btn-warning" type="button">Current selected channel is </button>
+            </div>
+            <select id="channel" class="custom-select" aria-label="Example select with button addon">
+              <option selected>Choose...</option>
+            </select>
+          </div>
+          <div id="buttonschan">
+            <button id="channelTo" type="submit" class="btn btn-primary">Go to selected channel</button>
+            <button id="newChannel" type="button" class="btn btn-primary">Create a new Channel</button>
+          </div>
+          <div id="ChNamegp" class="input-group input-group-sm mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text" id="inputGroup-sizing-sm">Input the channel name and click on submit</span>
+            </div>
+            <input id="channelname" type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing-sm">
+            <div class="btn-group" role="group" aria-label="Basic example">
+                <button type="submit" id="channel_submit" class="btn btn-secondary">Sumbit</button>
+            </div>
+          </div>
+        <div id="Newmessage">
+    
+          <div class="form-group">
+            <textarea id="dafec" class="form-control" placeholder="Type message..." rows="3"></textarea>
+          </div>
+          <!-- <div class="custom-file">
+            <input type="file" class="custom-file-input" id="validatedCustomFile" required>
+            <label class="custom-file-label" for="validatedCustomFile">Choose file...</label>
+            <div class="invalid-feedback">Attach any file you want to send</div>
+          </div> -->
+          <button id="sendMsg" type="submit" class="btn btn-primary">Send</button><br>
+        </div>
+        <div id="messages">
+       </div>
+         
+          
+
+    </body>
+</html>
